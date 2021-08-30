@@ -16,6 +16,8 @@ int is_pid_digit(char *pid)
 
 int main(int argc, char **argv)
 {
+    int pid;
+
     if (argc != 3)
     {
         ft_printf("Wrong number of arguements\n");
@@ -28,6 +30,10 @@ int main(int argc, char **argv)
         ft_printf("PID Number provided is not even a number.\n");
         return (0);
     }
-    ft_printf("name of program:%s \n", argv[0]);
+    pid = ft_atoi(argv[1]);
+    if (kill(pid, 0) == ERROR)
+        ft_printf("Invalid process ID #%d \n", pid);
+    else
+        ft_printf("Process exists\n");
     return (0);
 }
