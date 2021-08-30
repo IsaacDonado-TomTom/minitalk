@@ -18,9 +18,10 @@ int main(int argc, char **argv)
 {
     if (argc != 3)
     {
-        ft_printf("Wrong number of arguements\n\
-The program should be executed as follows;\n./minitalk_client [PID NUMBER] [MESSAGE]\n");
-    return (0);
+        ft_printf("Wrong number of arguements\n");
+        ft_printf("The program should be executed as follows;\n");
+        ft_printf("./minitalk_client [PID NUMBER] [MESSAGE]\n");
+        return (0);
     }
     if (is_pid_digit(argv[1]) == FALSE)
     {
