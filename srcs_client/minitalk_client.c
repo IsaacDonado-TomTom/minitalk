@@ -1,6 +1,17 @@
 #include <unistd.h>
 #include <minitalk.h>
 
+void    check_kill(int kill_return)
+{
+    if (kill_return >= 0)
+        return ;
+    else
+    {
+        ft_putstr_fd("\033[1m\033[31mError sending message!\033[1m\033[39m\n", 1);
+        exit (errno);
+    }
+}
+
 int is_pid_digit(char *pid)
 {
     int i;
@@ -15,41 +26,55 @@ int is_pid_digit(char *pid)
     return (1);
 }
 
+void    send_msg_subloop(int pid, char c)
+{
+    unsigned char byte;
+
+    byte = 0b10000000;
+    while (byte)
+    {
+        if ((byte&c) > 0)
+            check_kill(kill(pid, SIGUSR2));
+        else
+            check_kill(kill(pid, SIGUSR1));
+        byte = byte>>1;
+        usleep(150);
+    }
+    return ;
+}
+
 void    send_msg_loop(int pid, char *msg)
 {
     int i;
-    unsigned char byte;
 
     i = 0;
     while (msg[i] != '\0')
     {
-        byte = 255;
-        while (byte)
-        {
-            if ((byte & msg[i]) == 1)
-                kill(pid, SIGUSR2);
-            else
-                kill(pid, SIGUSR1);
-            byte = byte >> 1;
-            usleep(100);
-        }
+        send_msg_subloop(pid, msg[i]);
         i++;
     }
-    byte = 0b10000000;
-        while (byte)
-    {
-        if ((byte & msg[i]) == 1)
-            kill(pid, SIGUSR2);
-        else
-            kill(pid, SIGUSR1);
-        byte = byte >> 1;
-        usleep(1000);
-    }
+    send_msg_subloop(pid, msg[i]);
+    return ;
+}
+
+void    success(int sig, siginfo_t *info, void *ucontext)
+{
+    (void)sig;
+    (void)ucontext;
+    (void)info;
+    
+    ft_putstr_fd("\033[1m\033[32mMessage sent!\033[1m\033[39m\n", 1);
+    return ;
 }
 
 int main(int argc, char **argv)
 {
     int pid;
+    //struct sigaction    success;
+    //struct sigaction    fail;
+
+    //success.sa_sigaction = &success;
+    //sigaction(SIGUSR1, &success, NULL);
 
     if (argc != 3)
     {
