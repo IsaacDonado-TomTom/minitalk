@@ -14,7 +14,7 @@ SRCS_CLIENT = $(addprefix $(SRC_MAP), $(SRC_CLIENT))
 
 OBJS_CLIENT=$(SRCS_CLIENT:.c=.o)
 
-HDRS = -I hdrs/ -I libft/hdrs -I
+HDRS = -I hdrs/ -I libft/hdrs
 
 LIBS = libft/libft.a
 
