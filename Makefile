@@ -18,7 +18,7 @@ HDRS = -I hdrs/ -I libft/hdrs
 
 LIBS = libft/libft.a
 
-FLAGS = -Wall -Werror -Wextra -g -fsanitize=address
+FLAGS = -Wall -Werror -Wextra -g
 
 all: libft server client
 	@echo "\033[1m\033[32mAll rule fulfilled ( Makefile )...\033[39m"
