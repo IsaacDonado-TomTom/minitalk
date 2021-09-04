@@ -6,7 +6,7 @@
 /*   By: idonado <idonado@student.codam.nl>           +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2021/09/01 19:29:06 by idonado       #+#    #+#                 */
-/*   Updated: 2021/09/01 19:33:52 by idonado       ########   odam.nl         */
+/*   Updated: 2021/09/04 20:12:37 by idonado       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ static void	send_msg_subloop(int pid, char c)
 		else
 			check_kill(kill(pid, SIGUSR1));
 		byte = byte >> 1;
-		usleep(150);
+		usleep(170);
 	}
 	return ;
 }

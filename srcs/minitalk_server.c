@@ -6,7 +6,7 @@
 /*   By: idonado <idonado@student.codam.nl>           +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2021/08/31 16:46:02 by idonado       #+#    #+#                 */
-/*   Updated: 2021/09/01 19:37:48 by idonado       ########   odam.nl         */
+/*   Updated: 2021/09/04 20:30:12 by idonado       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,6 @@ static void	clear_global_struct(void)
 	g_sig_data.str_index = 0;
 	g_sig_data.index = 0;
 	g_sig_data.sender_pid = 0;
-	while (i < MAX_CHARS)
-	{
-		g_sig_data.buffer[i] = 0;
-		i++;
-	}
 	return ;
 }
 
@@ -49,7 +44,7 @@ static void	one_handler(int sig, siginfo_t *info, void *ucontext)
 	(void)ucontext;
 	(void)info;
 	byte = 0b10000000;
-	g_sig_data.buffer[g_sig_data.str_index] |= byte >> g_sig_data.index;
+	g_sig_data.temp_char |= byte >> g_sig_data.index;
 	g_sig_data.index++;
 	if (!g_sig_data.sender_pid)
 		g_sig_data.sender_pid = info->si_pid;
@@ -63,12 +58,19 @@ static void	receive_loop(void)
 		pause();
 		if (g_sig_data.index == CHAR_BITS)
 		{
-			ft_putchar_fd(g_sig_data.buffer[g_sig_data.str_index], 1);
+			g_sig_data.buffer = ft_joinchr(g_sig_data.buffer, \
+			g_sig_data.temp_char, g_sig_data.str_index);
+			g_sig_data.temp_char = 0;
 			if (g_sig_data.buffer[g_sig_data.str_index] == '\0')
 			{
+				ft_putstr_fd(g_sig_data.buffer, 1);
 				ft_putchar_fd('\n', 1);
+				if (g_sig_data.buffer != NULL)
+					free(g_sig_data.buffer);
+				g_sig_data.buffer = NULL;
 				check_kill(kill(g_sig_data.sender_pid, SIGUSR1));
 				clear_global_struct();
+				g_sig_data.str_index = -1;
 			}
 			g_sig_data.index = 0;
 			g_sig_data.str_index++;
@@ -90,6 +92,7 @@ int	main(void)
 	one.sa_flags = SA_SIGINFO;
 	sigaction(SIGUSR2, &one, NULL);
 	pid = getpid();
+	g_sig_data.buffer = NULL;
 	clear_global_struct();
 	ft_putstr_fd("Server PID: ", 1);
 	ft_putnbr_fd(pid, 1);

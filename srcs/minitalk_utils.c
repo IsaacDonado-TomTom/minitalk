@@ -6,7 +6,7 @@
 /*   By: idonado <idonado@student.codam.nl>           +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2021/09/01 17:55:22 by idonado       #+#    #+#                 */
-/*   Updated: 2021/09/01 19:33:40 by idonado       ########   odam.nl         */
+/*   Updated: 2021/09/04 19:58:26 by idonado       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,4 +30,29 @@ void	if_kill_returns_zero(int pid)
 	ft_putchar_fd('\n', 1);
 	exit(0);
 	return ;
+}
+
+char	*ft_joinchr(char *str, int c, int str_index)
+{
+	char	*result;
+	size_t	i;
+
+	if (str == NULL)
+	{
+		result = malloc(1);
+		result[0] = c;
+		return (result);
+	}
+	result = malloc(ft_strlen(str) + 2);
+	if (!result)
+		return (NULL);
+	i = 0;
+	while (i != (size_t)str_index)
+	{
+		result[i] = str[i];
+		i++;
+	}
+	result[i] = c;
+	free(str);
+	return (result);
 }
