@@ -6,7 +6,7 @@
 /*   By: idonado <idonado@student.codam.nl>           +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2021/09/01 19:29:06 by idonado       #+#    #+#                 */
-/*   Updated: 2021/09/04 20:12:37 by idonado       ########   odam.nl         */
+/*   Updated: 2021/09/04 21:40:39 by idonado       ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ static int	is_pid_digit(char *pid)
 	return (1);
 }
 
-static void	send_msg_subloop(int pid, char c)
+static void	send_msg_subloop(int pid, char c, int timer)
 {
 	unsigned char	byte;
 
@@ -38,42 +38,38 @@ static void	send_msg_subloop(int pid, char c)
 		else
 			check_kill(kill(pid, SIGUSR1));
 		byte = byte >> 1;
-		usleep(170);
+		usleep(timer);
 	}
 	return ;
 }
 
 static void	send_msg_loop(int pid, char *msg)
 {
-	int	i;
+	int		i;
+	size_t	len;
+	int		timer;
 
 	i = 0;
+	len = ft_strlen(msg);
+	if (len <= 4020)
+		timer = 170;
+	else if (len > 4020 && len <= 8040)
+		timer = 255;
+	else
+		timer = 330;
 	while (msg[i] != '\0')
 	{
-		send_msg_subloop(pid, msg[i]);
+		send_msg_subloop(pid, msg[i], timer);
 		i++;
 	}
-	send_msg_subloop(pid, msg[i]);
-	return ;
-}
-
-static void	success_handler(int sig, siginfo_t *info, void *ucontext)
-{
-	(void)ucontext;
-	(void)ucontext;
-	(void)sig;
-	(void)info;
-	ft_putstr_fd("\033[1m\033[32mMessage sent!\033[1m\033[39m\n", 1);
+	send_msg_subloop(pid, msg[i], timer);
 	return ;
 }
 
 int	main(int argc, char **argv)
 {
 	int					pid;
-	struct sigaction	success;
 
-	success.sa_sigaction = &success_handler;
-	sigaction(SIGUSR1, &success, NULL);
 	if (argc != 3)
 	{
 		ft_putstr_fd("Wrong number of arguements\n", 1);
@@ -91,5 +87,6 @@ int	main(int argc, char **argv)
 		if_kill_returns_zero(pid);
 	else
 		send_msg_loop(pid, argv[2]);
+	ft_putstr_fd("\033[1m\033[32mMessage sent to server!\033[1m\033[39m\n", 1);
 	return (0);
 }
