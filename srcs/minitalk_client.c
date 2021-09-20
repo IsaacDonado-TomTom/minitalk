@@ -10,59 +10,75 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <minitalk.h>
+#include <client.h>
 
-static int	is_pid_digit(char *pid)
+static void	safe_exit(char *str)
 {
-	int	i;
+	if (str)
+		free(str);
+	ft_putstr_fd("Unexpected error.\n", 2);
+	exit(-1);
+}
 
-	i = 0;
-	while (pid[i] != '\0')
+int	set_end(int pid, char *str)
+{
+	static int	i = 0;
+
+	if (i++ != 8)
 	{
-		if (ft_isdigit(pid[i]) == FALSE)
-			return (0);
-		i++;
+		if (kill(pid, SIGUSR1) == -1)
+			safe_exit(str);
+		return (0);
 	}
 	return (1);
 }
 
-static void	send_msg_subloop(int pid, char c, int timer)
+static int	send_bit(int pid, char *msg)
 {
-	unsigned char	byte;
+	static char	*s_str = 0;
+	static int	s_pid = 0;
+	static int	s_bits = -1;
 
-	byte = 0b10000000;
-	while (byte)
+	if (msg)
+		s_str = ft_strdup(msg);
+	if (s_str == NULL)
+		safe_exit(0);
+	if (pid)
+		s_pid = pid;
+	if (s_str[++s_bits / 8])
 	{
-		if ((byte & c) > 0)
-			check_kill(kill(pid, SIGUSR2));
-		else
-			check_kill(kill(pid, SIGUSR1));
-		byte = byte >> 1;
-		usleep(timer);
+		if (s_str[s_bits / 8] & (0b10000000 >> (s_bits % 8)))
+		{
+			if (kill(s_pid, SIGUSR2) == -1)
+				safe_exit(s_str);
+		}
+		else if (kill(s_pid, SIGUSR1) == -1)
+			safe_exit(s_str);
+		return (0);
 	}
-	return ;
+	if (!set_end(s_pid, s_str))
+		return (0);
+	free(s_str);
+	return (1);
 }
 
-static void	send_msg_loop(int pid, char *msg)
+static void	signal_handler(int sig)
 {
-	int		i;
-	size_t	len;
-	int		timer;
+	int	last_byte;
 
-	i = 0;
-	len = ft_strlen(msg);
-	if (len <= 4020)
-		timer = 170;
-	else if (len > 4020 && len <= 8040)
-		timer = 255;
-	else
-		timer = 330;
-	while (msg[i] != '\0')
+	last_byte = 0;
+	if (sig == SIGUSR1)
+		last_byte = send_bit(0, 0);
+	else if (sig == SIGUSR2)
 	{
-		send_msg_subloop(pid, msg[i], timer);
-		i++;
+		ft_putstr_fd("Unexpected Error!\n", 1);
+		exit(-1);
 	}
-	send_msg_subloop(pid, msg[i], timer);
+	if (last_byte == 1)
+	{
+		ft_putstr_fd("Message sent!\n", 1);
+		exit(0);
+	}
 	return ;
 }
 
@@ -77,16 +93,17 @@ int	main(int argc, char **argv)
 		ft_putstr_fd("./minitalk_client [PID NUMBER] [MESSAGE]\n", 1);
 		return (0);
 	}
-	if (is_pid_digit(argv[1]) == FALSE)
+	if (is_pid_digit(argv[1]) == 0)
 	{
 		ft_putstr_fd("PID Number provided is not even a number.\n", 1);
 		return (0);
 	}
+	signal(SIGUSR1, signal_handler);
 	pid = ft_atoi(argv[1]);
-	if (kill(pid, 0) == ERROR)
+	if (kill(pid, 0) == -1)
 		if_kill_returns_zero(pid);
-	else
-		send_msg_loop(pid, argv[2]);
-	ft_putstr_fd("\033[1m\033[32mMessage sent to server!\033[1m\033[39m\n", 1);
+	send_bit(pid, argv[2]);
+	while (1)
+		pause();
 	return (0);
 }

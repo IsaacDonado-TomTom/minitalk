@@ -10,92 +10,66 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <minitalk.h>
+#include <server.h>
 
-t_sig_data	g_sig_data;
-
-static void	clear_global_struct(void)
+static void	check_kill(int kill_result, int pid, char *msg)
 {
-	int	i;
-
-	i = 0;
-	g_sig_data.str_index = 0;
-	g_sig_data.index = 0;
-	g_sig_data.sender_pid = 0;
-	return ;
-}
-
-static void	zero_handler(int sig, siginfo_t *info, void *ucontext)
-{
-	(void)sig;
-	(void)ucontext;
-	(void)info;
-	g_sig_data.index++;
-	if (!g_sig_data.sender_pid)
-		g_sig_data.sender_pid = info->si_pid;
-	return ;
-}
-
-static void	one_handler(int sig, siginfo_t *info, void *ucontext)
-{
-	unsigned char	byte;
-
-	(void)sig;
-	(void)ucontext;
-	(void)info;
-	byte = 0b10000000;
-	g_sig_data.temp_char |= byte >> g_sig_data.index;
-	g_sig_data.index++;
-	if (!g_sig_data.sender_pid)
-		g_sig_data.sender_pid = info->si_pid;
-	return ;
-}
-
-static void	receive_loop(void)
-{
-	while (1)
+	if (kill_result == -1)
 	{
-		pause();
-		if (g_sig_data.index == CHAR_BITS)
-		{
-			g_sig_data.buffer = ft_joinchr(g_sig_data.buffer, \
-			g_sig_data.temp_char, g_sig_data.str_index);
-			g_sig_data.temp_char = 0;
-			if (g_sig_data.buffer[g_sig_data.str_index] == '\0')
-			{
-				ft_putstr_fd(g_sig_data.buffer, 1);
-				ft_putchar_fd('\n', 1);
-				if (g_sig_data.buffer != NULL)
-					free(g_sig_data.buffer);
-				g_sig_data.buffer = NULL;
-				clear_global_struct();
-				g_sig_data.str_index = -1;
-			}
-			g_sig_data.index = 0;
-			g_sig_data.str_index++;
-		}
+		kill(pid, SIGUSR2);
+		if (msg)
+			free(msg);
 	}
 	return ;
+}
+
+static char	*print_msg(char *msg)
+{
+	ft_putstr_fd(msg, 1);
+	free(msg);
+	return (NULL);
+}
+
+static void	bit_handler(int sig, siginfo_t *info, void *ucontext)
+{
+	static char	s_c = 0b11111111;
+	static int	s_bits = 0;
+	static int	s_pid = 0;
+	static char	*s_msg = 0;
+
+	(void)ucontext;
+	if (info->si_pid)
+		s_pid = info->si_pid;
+	if (sig == SIGUSR1)
+		s_c ^= 0b10000000 >> s_bits;
+	else if (sig == SIGUSR2)
+		s_c |= 0b10000000 >> s_bits;
+	if (++s_bits == 8)
+	{
+		if (s_c)
+			s_msg = ft_joinchr(s_msg, s_c);
+		else
+			s_msg = print_msg(s_msg);
+		s_bits = 0;
+		s_c = 0b11111111;
+	}
+	check_kill(kill(s_pid, SIGUSR1), s_pid, s_msg);
 }
 
 int	main(void)
 {
 	int					pid;
-	struct sigaction	zero;
-	struct sigaction	one;
+	struct sigaction	bit;
 
-	zero.sa_sigaction = &zero_handler;
-	zero.sa_flags = SA_SIGINFO;
-	sigaction(SIGUSR1, &zero, NULL);
-	one.sa_sigaction = &one_handler;
-	one.sa_flags = SA_SIGINFO;
-	sigaction(SIGUSR2, &one, NULL);
+	bit.sa_sigaction = &bit_handler;
+	bit.sa_flags = SA_SIGINFO;
+	sigaction(SIGUSR1, &bit, NULL);
+	sigaction(SIGUSR2, &bit, NULL);
 	pid = getpid();
-	g_sig_data.buffer = NULL;
-	clear_global_struct();
 	ft_putstr_fd("Server PID: ", 1);
 	ft_putnbr_fd(pid, 1);
 	ft_putchar_fd('\n', 1);
-	receive_loop();
+	while (1)
+		pause();
 	return (0);
 }

@@ -10,17 +10,20 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <minitalk.h>
+#include <client.h>
 
-void	check_kill(int kill_return)
+int	is_pid_digit(char *pid)
 {
-	if (kill_return >= 0)
-		return ;
-	else
+	int	i;
+
+	i = 0;
+	while (pid[i] != '\0')
 	{
-		ft_putstr_fd("\033[1m\033[31mError linking processes!\033[1m\033[39m\n", 1);
-		exit (errno);
+		if (ft_isdigit(pid[i]) == 0)
+			return (0);
+		i++;
 	}
+	return (1);
 }
 
 void	if_kill_returns_zero(int pid)
@@ -30,29 +33,4 @@ void	if_kill_returns_zero(int pid)
 	ft_putchar_fd('\n', 1);
 	exit(0);
 	return ;
-}
-
-char	*ft_joinchr(char *str, int c, int str_index)
-{
-	char	*result;
-	size_t	i;
-
-	if (str == NULL)
-	{
-		result = malloc(1);
-		result[0] = c;
-		return (result);
-	}
-	result = malloc(ft_strlen(str) + 2);
-	if (!result)
-		return (NULL);
-	i = 0;
-	while (i != (size_t)str_index)
-	{
-		result[i] = str[i];
-		i++;
-	}
-	result[i] = c;
-	free(str);
-	return (result);
 }

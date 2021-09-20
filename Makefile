@@ -1,5 +1,5 @@
 SRC_SERVER = 	minitalk_server.c\
-				minitalk_utils.c
+				server_utils.c
 
 SRC_MAP = srcs/
 
@@ -8,7 +8,7 @@ SRCS_SERVER = $(addprefix $(SRC_MAP), $(SRC_SERVER))
 OBJS_SERVER=$(SRCS_SERVER:.c=.o)
 
 SRC_CLIENT = 	minitalk_client.c\
-				minitalk_utils.c
+				client_utils.c
 
 SRCS_CLIENT = $(addprefix $(SRC_MAP), $(SRC_CLIENT))
 
@@ -18,7 +18,7 @@ HDRS = -I hdrs/ -I libft/hdrs
 
 LIBS = libft/libft.a
 
-FLAGS = -Wall -Werror -Wextra -g
+FLAGS = -Wall -Werror -Wextra
 
 all: libft server client
 	@echo "\033[1m\033[32mAll rule fulfilled ( Makefile )...\033[39m"
